@@ -66,7 +66,6 @@ export async function sendEmailVerification({ participantEmail, sampleId }: Send
         throw new SampleFullError("This sample is full of participants.");
 
     let participant = findParticipantByEmail({ sample, participantEmail });
-
     if (participant?.adultForm?.endFillFormAt) {
         throw new FormAlreadyFinished("The form was already finished by the participant.");
     }
@@ -104,6 +103,63 @@ export async function sendEmailVerification({ participantEmail, sampleId }: Send
         verificationCode,
         participantId: participant._id,
         sampleId,
+    });
+
+    return true;
+}
+
+export async function sendEmailVerificationAddParticipant({ participantEmail, sampleId }: SendEmailVerificationParams) {
+    const verificationCode = crypto.randomBytes(128).toString("hex");
+
+    const { researcherDoc, sample } = await getSampleById({ sampleId });
+
+    if (sample.status !== "Autorizado" || !sample.qttParticipantsAuthorized) {
+        throw new Error("This sample was not authorized!");
+    }
+
+    if ((sample.participants?.length || 0) + 1 > sample.qttParticipantsAuthorized)
+        throw new SampleFullError("This sample is full of participants.");
+
+    let participant = findParticipantByEmail({ sample, participantEmail });
+    if (participant?.adultForm?.endFillFormAt) {
+        throw new FormAlreadyFinished("The form was already finished by the participant.");
+    }
+
+    if (participant) {
+        participant.verification = {
+            code: verificationCode,
+            generatedAt: new Date(),
+        };
+    } else {
+        // New participant
+        participant = {
+            personalData: { email: participantEmail },
+            verification: {
+                code: verificationCode,
+                generatedAt: new Date(),
+            },
+        };
+
+        let arrLen = sample.participants?.push(participant);
+        if (sample.participants && arrLen) {
+            participant = sample.participants[arrLen - 1]; // Get participant id
+        }
+    }
+
+    if (!participant._id) {
+        throw new Error("Cannot send the verification email.");
+    }
+
+    await researcherDoc.save();
+
+    EmailUtils.dispatchAddParticipantEmail({
+        participantName: participant.personalData?.fullName,
+        participantEmail,
+        verificationCode,
+        participantId: participant._id,
+        sampleId,
+        researcherName: researcherDoc.personalData.fullName,
+        researcherEmail: researcherDoc.email,
     });
 
     return true;

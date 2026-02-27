@@ -123,6 +123,34 @@ export const dispatchParticipantVerificationEmail = (body: IEmailParticipantVeri
         .catch(console.error);
 };
 
+interface IEmailAddParticipantEmail {
+    participantName?: string;
+    verificationCode: string;
+    participantEmail: string;
+    sampleId: string;
+    participantId: string;
+    researcherName: string;
+    researcherEmail: string;
+}
+export const dispatchAddParticipantEmail = (body: IEmailAddParticipantEmail) => {
+    email
+        .send({
+            template: "participantIndication",
+            message: {
+                to: body.participantEmail,
+                subject: "SuperDot - Voce foi indicado.",
+            },
+            locals: {
+                participantName: body.participantName,
+                researcherName: body.researcherName,
+                researcherEmail: body.researcherEmail,
+                verificationUrl: `${env.FRONT_END_URL}/formulario-adulto/${body.sampleId}/${body.participantId}/${body.verificationCode}`,
+            },
+        })
+        .then(console.log)
+        .catch(console.error);
+};
+
 interface IEmailSecondSourceVerification {
     secondSourceName?: string;
     verificationCode: string;
@@ -149,6 +177,8 @@ export const dispatchSecondSourceVerificationEmail = (body: IEmailSecondSourceVe
         .then(console.log)
         .catch(console.error);
 };
+
+
 
 interface IEmailNewRole {
     researcherName: string;
@@ -259,3 +289,7 @@ export const dispatchNewSampleNotificationEmail = ({
         .then(console.log)
         .catch(console.error);
 };
+
+export function dispatchParticipantEmail(arg0: { participantName: string | undefined; participantEmail: string; verificationCode: string; participantId: string; sampleId: string; }) {
+    throw new Error("Function not implemented.");
+}

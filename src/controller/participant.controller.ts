@@ -23,7 +23,6 @@ export async function handlerValidateEmailInSample(
     try {
         const { participantEmail } = req.body;
         const { sampleId } = req.params;
-        console.log("aqui primeiro");
         const sent = await ParticipantService.sendEmailVerification({ participantEmail, sampleId });
 
         res.status(201).json(sent);
