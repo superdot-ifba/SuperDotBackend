@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import { Page } from "../interface/page.interface";
 import ISample from "../interface/sample.interface";
 import ResearcherModel from "../model/researcher.model";
-import { dispatchNewSampleNotificationEmail, dispatchParticipantIndicationEmail } from "../util/emailSender.util";
+import { dispatchNewSampleNotificationEmail, } from "../util/emailSender.util";
 import { getResearcherRole } from "./researcher.service";
-import { create } from "lodash";
+import { sendEmailVerificationAddParticipant } from "./participant.service";
 
 
 interface GetSampleByIdParams {
@@ -346,11 +346,8 @@ export async function addParticipants({ sampleId, participants }: AddParticipant
     await researcherDoc.save();
 
     participantsFiltered?.forEach((participant) => {
-        dispatchParticipantIndicationEmail({
+        sendEmailVerificationAddParticipant({
             participantEmail: participant.personalData?.email as string,
-            participantName: participant.personalData?.fullName as string,
-            researcherEmail: researcherDoc.email,
-            researcherName: researcherDoc.personalData.fullName,
             sampleId,
         });
     });

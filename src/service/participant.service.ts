@@ -96,7 +96,6 @@ export async function sendEmailVerification({ participantEmail, sampleId }: Send
     }
 
     await researcherDoc.save();
-
     EmailUtils.dispatchParticipantVerificationEmail({
         participantName: participant.personalData?.fullName,
         participantEmail,
@@ -151,7 +150,6 @@ export async function sendEmailVerificationAddParticipant({ participantEmail, sa
     }
 
     await researcherDoc.save();
-
     EmailUtils.dispatchAddParticipantEmail({
         participantName: participant.personalData?.fullName,
         participantEmail,
