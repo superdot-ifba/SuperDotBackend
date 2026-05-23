@@ -14,6 +14,8 @@ export default interface IResearcher {
     role?: string;
     instituition: string;
     researchSamples?: ISample[];
+    passwordResetToken?: string;
+    passwordResetExpires?: Date;
     createdAt?: Date;
     updatedAt?: Date;
 }

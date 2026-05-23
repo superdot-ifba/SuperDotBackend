@@ -113,3 +113,34 @@ export async function setUserRoleHandler(req: Request<{}, {}, SetUserRoleDTO["bo
         res.status(500).send("Unknown error.");
     }
 }
+
+export async function resetPasswordHandler(req: Request, res: Response) {
+    try {
+        const { token, password } = req.body;
+
+        await ResearcherService.resetPasswordWithToken(token, password);
+
+        return res.status(200).json({
+            message: "Senha redefinida com sucesso!"
+        });
+
+    } catch (error: any) {
+        console.error(error);
+
+        if (error.message === "TOKEN_INVALID_OR_EXPIRED") {
+            return res.status(400).json({
+                message: "O link de redefinição é inválido ou expirou."
+            });
+        }
+        
+        if (error.message === "SAME_PASSWORD") {
+            return res.status(400).json({
+                error: "A nova senha não pode ser igual à senha anterior."
+            });
+        }
+
+        return res.status(500).json({
+            message: "Erro interno no servidor."
+        });
+    }
+}

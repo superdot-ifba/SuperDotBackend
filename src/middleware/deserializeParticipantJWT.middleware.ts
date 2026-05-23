@@ -20,6 +20,8 @@ export const deserializeParticipantJWT = (req: Request<{}, {}, {}, {}>, res: Res
         "/api/second-source/validate-verification-code/sample",
         "/iframe_api",
         "/embed/",
+        "/api/researcher/forgot-password",
+        "/api/researcher/resetPassword",
 
     ];
 

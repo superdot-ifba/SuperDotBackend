@@ -51,6 +51,14 @@ const researcherSchema = new Schema<IResearcher>(
             required: [true, "Instituition is required"],
         },
         researchSamples: [sampleSchema],
+        passwordResetToken: {
+            type: String,
+            select: false, 
+        },
+        passwordResetExpires: {
+            type: Date,
+            select: false,
+        },
     },
     {
         timestamps: true,

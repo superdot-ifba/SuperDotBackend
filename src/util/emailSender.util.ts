@@ -290,6 +290,25 @@ export const dispatchNewSampleNotificationEmail = ({
         .catch(console.error);
 };
 
-export function dispatchParticipantEmail(arg0: { participantName: string | undefined; participantEmail: string; verificationCode: string; participantId: string; sampleId: string; }) {
-    throw new Error("Function not implemented.");
+interface IEmailForgotPassword {
+    userEmail: string;
+    userName: string;
+    token: string;
 }
+
+export const dispatchForgotPasswordEmail = (body: IEmailForgotPassword) => {
+    email
+        .send({
+            template: "forgotPassword", 
+            message: {
+                to: body.userEmail,
+                subject: "SuperDot - Recuperação de Senha",
+            },
+            locals: {
+                userName: body.userName,
+                resetPasswordUrl: `${env.FRONT_END_URL}/resetPassword?token=${body.token}`,
+            },
+        })
+        .then(console.log)
+        .catch(console.error);
+};

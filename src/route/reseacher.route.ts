@@ -9,6 +9,9 @@ import { getResearchDataBySampleIdAndParticipantIdSchema } from "../dto/research
 import { uploaderConfig } from "../util/uploader";
 import { processFormData } from "../middleware/formDataProcessor";
 import { checkExistingAvatar } from "../middleware/checkExistingAvatar";
+import { forgotPasswordDTO } from "../dto/researcher/forgotPassword.dto";
+import * as AuthController from "../controller/auth.controller";
+import { resetPasswordDTO } from "../dto/researcher/ResetPassword.dto";
 
 const researcherRouter = express.Router();
 
@@ -45,4 +48,15 @@ researcherRouter.get(
     ResearcherController.handlerGetReseachDataBySampleIdAndParticipantId
 );
 
+researcherRouter.post(
+    "/forgot-password",
+    validateDTO(forgotPasswordDTO),
+    ResearcherController.forgotPasswordController
+);
+
+researcherRouter.post(
+    "/resetPassword",
+    validateDTO(resetPasswordDTO), 
+    AuthController.resetPasswordHandler 
+);
 export { researcherRouter };

@@ -18,6 +18,8 @@ export const deserializeResearcherJWT = async (req: Request, res: Response, next
         "/api/second-source/validate-verification-code/sample",
         "/iframe_api",
         "/embed/",
+        "/api/researcher/forgot-password",
+        "/api/researcher/resetPassword",
 
     ];
 

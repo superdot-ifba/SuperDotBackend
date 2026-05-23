@@ -1,10 +1,13 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as ResearcherService from "../service/researcher.service";
 import { compareHashes, hashContent } from "../util/hash";
 import IResearcher from "../interface/researcher.interface";
 import { PaginateResearcherDTO, UpdateResearcherDTO, paginateResearcherParams } from "../dto/researcher.dto";
 import { GetResearcherNameBySampleIdDTO } from "../dto/researcher/getResearcherNameBySampleId.dto";
 import { GetResearchDataBySampleIdAndParticipantIdDTO } from "../dto/researcher/getResearchDataBySampleIdAndParticipantId.dto";
+import { updateResearcherResetToken } from "../service/researcher.service";
+import { dispatchForgotPasswordEmail } from "../util/emailSender.util";
+import crypto from 'crypto';
 
 
 export async function updateResearcherHandler(
@@ -213,5 +216,84 @@ export const researcherBody = async (req: Request<{}, {}, {}, {}>, res: Response
         console.error(e);
 
         res.status(409).send(e.message);
+    }
+};
+
+export const forgotPasswordController = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                error: 'O e-mail é obrigatório.'
+            });
+        }
+
+        // TOKEN ORIGINAL (vai no email)
+        const resetToken = crypto.randomBytes(20).toString('hex');
+
+        // HASH DO TOKEN (vai no banco)
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        const tokenExpires = new Date();
+        tokenExpires.setHours(tokenExpires.getHours() + 1);
+
+        try {
+            const researcher = await updateResearcherResetToken(
+                { email: email.toLowerCase().trim() },
+                hashedToken,
+                tokenExpires
+            );
+
+            dispatchForgotPasswordEmail({
+                userEmail: researcher.email,
+                userName: researcher.personalData.fullName,
+                token: resetToken
+            });
+
+        } catch (serviceError: any) {
+
+            if (serviceError.message === "Researcher is not found") {
+                console.log(`Tentativa de recuperação com e-mail inexistente: ${email}`);
+            } else {
+                throw serviceError;
+            }
+        }
+
+        return res.status(200).json({
+            message: 'Se o e-mail estiver cadastrado, um link de recuperação será enviado.'
+        });
+
+    } catch (error) {
+        console.error('Erro no fluxo de forgot-password:', error);
+
+        return res.status(500).json({
+            error: 'Erro interno ao processar a solicitação.'
+        });
+    }
+};
+
+
+export const resetPasswordController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { token, password } = req.body;
+
+        await ResearcherService.resetPasswordWithToken(token, password);
+
+        return res.status(200).json({ 
+            message: "Senha alterada com sucesso! Você já pode fazer login." 
+        });
+        
+    } catch (error: any) {
+        if (error.message === "TOKEN_INVALID_OR_EXPIRED") {
+            return res.status(400).json({ 
+                error: "O link de recuperação é inválido ou já expirou." 
+            });
+        }
+        
+        next(error);
     }
 };
