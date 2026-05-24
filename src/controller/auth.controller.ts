@@ -127,20 +127,17 @@ export async function resetPasswordHandler(req: Request, res: Response) {
     } catch (error: any) {
         console.error(error);
 
-        if (error.message === "TOKEN_INVALID_OR_EXPIRED") {
-            return res.status(400).json({
-                message: "O link de redefinição é inválido ou expirou."
-            });
+        if (error.name === "TokenExpired") {
+            return res.status(401).send(error.message);
         }
         
-        if (error.message === "SAME_PASSWORD") {
-            return res.status(400).json({
-                error: "A nova senha não pode ser igual à senha anterior."
-            });
+        if (error.name === "SamePassword") {
+            return res.status(409).send(error.message);
         }
 
-        return res.status(500).json({
-            message: "Erro interno no servidor."
-        });
+        if (error.message === "PASSWORD_HASH_NOT_FOUND") {
+            return res.status(409).send(error.message);
+        }
+        res.status(500).send(error.message);
     }
 }

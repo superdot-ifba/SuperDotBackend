@@ -8,6 +8,7 @@ import { GetResearchDataBySampleIdAndParticipantIdDTO } from "../dto/researcher/
 import { updateResearcherResetToken } from "../service/researcher.service";
 import { dispatchForgotPasswordEmail } from "../util/emailSender.util";
 import crypto from 'crypto';
+import { SamePassword, TokenExpired } from "../error/researcher.error";
 
 
 export async function updateResearcherHandler(
@@ -276,24 +277,41 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
     }
 };
 
-
-export const resetPasswordController = async (req: Request, res: Response, next: NextFunction) => {
+export const resetPasswordHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
+
         const { token, password } = req.body;
 
-        await ResearcherService.resetPasswordWithToken(token, password);
+        await ResearcherService.resetPasswordWithToken(
+            token,
+            password
+        );
 
-        return res.status(200).json({ 
-            message: "Senha alterada com sucesso! Você já pode fazer login." 
+        return res.status(200).json({
+            message: "Senha alterada com sucesso! Você já pode fazer login."
         });
-        
+
     } catch (error: any) {
-        if (error.message === "TOKEN_INVALID_OR_EXPIRED") {
-            return res.status(400).json({ 
-                error: "O link de recuperação é inválido ou já expirou." 
-            });
+
+        console.log(error);
+
+        if (error instanceof TokenExpired) {
+            return res.status(401).send(error.message);
         }
         
-        next(error);
+
+        if (error instanceof SamePassword) {
+            return res.status(409).send(error.message);
+        }
+
+        if (error.message === "PASSWORD_HASH_NOT_FOUND") {
+            return res.status(409).send(error.message);
+        }
+
+        res.status(500).send(error.message);
     }
 };
