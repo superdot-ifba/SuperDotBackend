@@ -15,6 +15,18 @@ import { resetPasswordDTO } from "../dto/researcher/ResetPassword.dto";
 
 const researcherRouter = express.Router();
 
+researcherRouter.post(
+    "/forgot-password",
+    validateDTO(forgotPasswordDTO),
+    ResearcherController.forgotPasswordController
+);
+
+researcherRouter.post(
+    "/reset-password",
+    validateDTO(resetPasswordDTO),
+    AuthController.resetPasswordHandler
+);
+
 researcherRouter.put(
     "/update-researcher",
     [validateDTO(updateResearcherFormDataDTO), requireResearcherJWT],
@@ -46,12 +58,6 @@ researcherRouter.get(
     "/get-research-data-by/sample/:sampleId/participant/:participantId",
     validateDTO(getResearchDataBySampleIdAndParticipantIdSchema),
     ResearcherController.handlerGetReseachDataBySampleIdAndParticipantId
-);
-
-researcherRouter.post(
-    "/forgot-password",
-    validateDTO(forgotPasswordDTO),
-    ResearcherController.forgotPasswordController
 );
 
 researcherRouter.post(

@@ -1,17 +1,25 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /home/app
 
 COPY package*.json ./
-
 RUN npm install
 
 COPY . .
-
 RUN npm run build
 
-COPY ./src/storage/emailTemplates ./build/storage/emailTemplates
+
+FROM node:20-alpine AS runner
+
+WORKDIR /home/app
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
+RUN npm install --omit=dev
+
+COPY --from=builder /home/app/build ./build
 
 EXPOSE 3000
 
-CMD ["node", "-r", "dotenv/config", "build/server.js"]
+CMD ["node", "build/server.js"]

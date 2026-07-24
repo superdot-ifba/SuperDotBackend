@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import env from "./util/validateEnv";
 import app from "./app";
-import 'dotenv/config';
+import { verifyEmailTransport } from "./util/emailSender.util";
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
@@ -9,6 +9,7 @@ mongoose.connect(env.MONGO_CONNECTION_STRING, {
     dbName: "superdot"
 }).then(() => {
     console.log("Mongoose Connected");
+    verifyEmailTransport();
     app.listen(port, () => {
         console.log("Server running on port: " + port);
     });

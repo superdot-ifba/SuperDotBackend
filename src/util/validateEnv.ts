@@ -1,5 +1,8 @@
 import { cleanEnv, num, str } from "envalid";
 
+const rawNodeEnv = process.env.NODE_ENV;
+const isProduction = rawNodeEnv === "production";
+
 export default cleanEnv(process.env, {
     MONGO_CONNECTION_STRING: str({ desc: "URI de conexão com o banco de dados MongoDB" }),
     ACCESS_TOKEN_PRIVATE_KEY: str({ desc: "Chave privada para assinar o access token JWT" }),
@@ -24,8 +27,15 @@ export default cleanEnv(process.env, {
         default: "production" // Default seguro para ambiente de produção
     }),
 
-    // Variáveis de e-mail (opcionais - usar devDefault localmente)
+    // Em produção preferimos SMTP explícito em vez de depender de presets do provider.
 
-    EMAIL_USER: str({ default: "" }),
-    EMAIL_PASS: str({ default: "" })
+    EMAIL_USER: str({ default: isProduction ? undefined : "" }),
+    EMAIL_PASS: str({ default: isProduction ? undefined : "" }),
+    EMAIL_SERVICE: str({ default: "gmail" }),
+    EMAIL_HOST: str({ default: isProduction ? "smtp.gmail.com" : "" }),
+    EMAIL_PORT: num({ default: 465 }),
+    EMAIL_SECURE: str({
+        choices: ["true", "false"],
+        default: "true",
+    })
 });

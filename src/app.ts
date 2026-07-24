@@ -12,14 +12,25 @@ import { adultFormRoute } from "./route/adultForm.route";
 import { deserializeParticipantJWT } from "./middleware/deserializeParticipantJWT.middleware";
 import { participantRouter } from "./route/participant.route";
 import { secondSourceRouter } from "./route/secondSource.route";
+import env from "./util/validateEnv";
 
 const app = express();
 
 
 app.use(morgan("dev"));
 
+const frontendUrl = new URL(env.FRONT_END_URL);
+const wwwFrontendUrl = new URL(env.FRONT_END_URL);
+
+if (frontendUrl.hostname.startsWith("www.")) {
+    wwwFrontendUrl.hostname = frontendUrl.hostname.replace(/^www\./, "");
+} else {
+    wwwFrontendUrl.hostname = `www.${frontendUrl.hostname}`;
+}
+
 const allowedOrigins = [
-    process.env.FRONT_END_URL,
+    frontendUrl.origin,
+    wwwFrontendUrl.origin,
     "http://localhost:5173"
 ];
 

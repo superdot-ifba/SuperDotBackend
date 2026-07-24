@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { ResearcherDTO } from "../dto/researcher.dto";
+import { LoginDTO, SetUserRoleDTO } from "../dto/auth.dto";
 import * as ResearcherService from "../service/researcher.service";
 import { hashContent } from "../util/hash";
 import IResearcher from "../interface/researcher.interface";
-import { LoginDTO, SetUserRoleDTO } from "../dto/auth.dto";
+import { ResearcherDTO } from "../dto/researcher.dto";
 import { UserRoleDTO } from "../dto/auth.dto";
 import { dispatchNewRoleEmail } from "../util/emailSender.util";
 import { ROLES, RolesType } from "../util/consts";
