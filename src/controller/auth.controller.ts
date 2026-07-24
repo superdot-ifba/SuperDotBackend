@@ -163,3 +163,31 @@ export async function setUserRoleHandler(req: Request<{}, {}, SetUserRoleDTO["bo
         res.status(500).send("Unknown error.");
     }
 }
+
+export async function resetPasswordHandler(req: Request, res: Response) {
+    try {
+        const { token, password } = req.body;
+
+        await ResearcherService.resetPasswordWithToken(token, password);
+
+        return res.status(200).json({
+            message: "Senha redefinida com sucesso!"
+        });
+
+    } catch (error: any) {
+        console.error(error);
+
+        if (error.name === "TokenExpired") {
+            return res.status(401).send(error.message);
+        }
+        
+        if (error.name === "SamePassword") {
+            return res.status(409).send(error.message);
+        }
+
+        if (error.message === "PASSWORD_HASH_NOT_FOUND") {
+            return res.status(409).send(error.message);
+        }
+        res.status(500).send(error.message);
+    }
+}

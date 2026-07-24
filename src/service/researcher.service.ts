@@ -5,6 +5,9 @@ import { omit } from "lodash";
 import { compareHashes } from "../util/hash";
 import { getSampleById } from "./sample.service";
 import { findParticipantById } from "./participant.service";
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import { SamePassword, TokenExpired } from "../error/researcher.error";
 
 
 export async function createResearcher(researcherData: IResearcher) {
@@ -187,4 +190,97 @@ export async function getResearchDataBySampleIdAndParticipantId({
         researcherName: researcherDoc.personalData.fullName,
         participantName: participant.personalData?.fullName,
     };
+}
+
+
+export async function updateResearcherResetToken(
+    query: FilterQuery<IResearcher>,
+    token: string,
+    expiresAt: Date
+): Promise<IResearcher> {
+    
+    const researcher = await ResearcherModel.findOneAndUpdate(
+        query,
+        {
+            $set: {
+                passwordResetToken: token,
+                passwordResetExpires: expiresAt,
+            }
+        },
+        { new: true } 
+    )
+    .lean()
+    .exec();
+
+    if (!researcher) {
+        throw new Error("Researcher is not found");
+    }
+
+    return researcher;
+}
+
+export async function resetPasswordWithToken(
+    token: string,
+    newPasswordPlain: string
+): Promise<void> {
+    try {
+
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(token)
+            .digest("hex");
+
+        const researcher = await ResearcherModel.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: new Date() }
+        }).select("+passwordHash");
+
+        if (!researcher) {
+            throw new TokenExpired(
+                "O link de recuperação é inválido ou já expirou."
+            );
+        }
+
+        if (!researcher.passwordHash) {
+            throw new Error("PASSWORD_HASH_NOT_FOUND");
+        }
+
+        const isSamePassword = await bcrypt.compare(
+            newPasswordPlain,
+            researcher.passwordHash
+        );
+
+        if (isSamePassword) {
+            throw new SamePassword(
+                "A nova senha não pode ser igual à senha anterior."
+            );
+        }
+
+        const salt = await bcrypt.genSalt(10);
+
+        const newPasswordHash = await bcrypt.hash(
+            newPasswordPlain,
+            salt
+        );
+
+        researcher.passwordHash = newPasswordHash;
+
+        researcher.passwordResetToken = undefined;
+        researcher.passwordResetExpires = undefined;
+
+        await researcher.save();
+
+    } catch (error: any) {
+
+       if (
+            error.name === "SamePassword" || 
+            error.name === "TokenExpired" ||
+            error.message === "PASSWORD_HASH_NOT_FOUND"
+        ) {
+            throw error;
+        }
+
+        console.error("Erro inesperado no service:", error);
+        throw new Error("INTERNAL_SERVICE_ERROR");
+    }
 }
