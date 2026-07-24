@@ -39,6 +39,25 @@ export function issueResearcherRefreshToken({ researcherId }: IssueResearcherRef
     return refreshToken;
 }
 
+interface IssueResearcherPasswordResetTokenParams {
+    researcherId: string;
+}
+
+export function issueResearcherPasswordResetToken({ researcherId }: IssueResearcherPasswordResetTokenParams) {
+    const passwordResetToken = signJwt(
+        {
+            researcherId,
+            tokenPurpose: "password-reset",
+        },
+        "ACCESS_TOKEN_PRIVATE_KEY",
+        {
+            expiresIn: "15m",
+        }
+    );
+
+    return passwordResetToken;
+}
+
 interface IssueParticipantAccessTokenParams {
     participantId: string;
 }

@@ -273,6 +273,26 @@ export const dispatchNewRoleEmail = (body: IEmailNewRole) => {
     }).catch(() => undefined);
 };
 
+interface IEmailPasswordReset {
+    researcherName: string;
+    researcherEmail: string;
+    resetToken: string;
+}
+
+export const dispatchPasswordResetEmail = (body: IEmailPasswordReset) => {
+    sendTemplatedEmail("password-reset", {
+        template: "passwordReset",
+        message: {
+            to: body.researcherEmail,
+            subject: "SuperDot - Redefinição de senha.",
+        },
+        locals: {
+            researcherName: body.researcherName,
+            resetUrl: `${env.FRONT_END_URL}/reset-password/${body.resetToken}`,
+        },
+    }).catch(() => undefined);
+};
+
 interface IEmailParticipantIndication {
     participantEmail: string;
     participantName: string;

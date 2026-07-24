@@ -9,6 +9,8 @@ export const deserializeParticipantJWT = (req: Request<{}, {}, {}, {}>, res: Res
     const publicRoutes = [
         "/api/auth/login",
         "/api/auth/register",
+        "/api/researcher/forgot-password",
+        "/api/researcher/reset-password",
         "/api/participant/validate-verification-code",
         "/api/participant/send-verification-code/sample",
         "/api/researcher/get-researcher-name-by-sample",
