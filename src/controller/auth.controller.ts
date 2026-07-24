@@ -1,15 +1,13 @@
 import { Request, Response } from "express";
-import { ForgotPasswordDTO, LoginDTO, ResetPasswordDTO, SetUserRoleDTO } from "../dto/auth.dto";
+import { LoginDTO, SetUserRoleDTO } from "../dto/auth.dto";
 import * as ResearcherService from "../service/researcher.service";
 import { hashContent } from "../util/hash";
 import IResearcher from "../interface/researcher.interface";
 import { ResearcherDTO } from "../dto/researcher.dto";
 import { UserRoleDTO } from "../dto/auth.dto";
-import { dispatchNewRoleEmail, dispatchPasswordResetEmail } from "../util/emailSender.util";
+import { dispatchNewRoleEmail } from "../util/emailSender.util";
 import { ROLES, RolesType } from "../util/consts";
-import { issueResearcherAccessToken, issueResearcherPasswordResetToken, issueResearcherRefreshToken } from "../service/auth.service";
-import { verifyJwt } from "../util/jwt";
-import { get } from "lodash";
+import { issueResearcherAccessToken, issueResearcherRefreshToken } from "../service/auth.service";
 
 export async function registerHandler(req: Request<{}, {}, ResearcherDTO["body"], {}>, res: Response) {
     try {
@@ -68,54 +66,6 @@ export async function loginHandler(req: Request<{}, {}, LoginDTO["body"], {}>, r
 
         // TO DO errors handlers
         res.status(409).send(e.message);
-    }
-}
-
-export async function forgotPasswordHandler(req: Request<{}, {}, ForgotPasswordDTO["body"], {}>, res: Response) {
-    const responseMessage = "Se o e-mail estiver cadastrado, enviaremos instruções para redefinir a senha.";
-
-    try {
-        const researcher = await ResearcherService.findResearcher({ email: req.body.email });
-
-        if (researcher._id) {
-            const resetToken = issueResearcherPasswordResetToken({ researcherId: researcher._id });
-
-            dispatchPasswordResetEmail({
-                researcherName: researcher.personalData.fullName,
-                researcherEmail: researcher.email,
-                resetToken,
-            });
-        }
-    } catch (e) {
-        console.error(e);
-    }
-
-    res.status(200).json({ message: responseMessage });
-}
-
-export async function resetPasswordHandler(req: Request<{}, {}, ResetPasswordDTO["body"], {}>, res: Response) {
-    try {
-        const { decoded, expired } = verifyJwt(req.body.token, "ACCESS_TOKEN_PUBLIC_KEY");
-        const researcherId = get(decoded, "researcherId");
-        const tokenPurpose = get(decoded, "tokenPurpose");
-
-        if (expired) {
-            return res.status(401).json({ message: "Token expirado" });
-        }
-
-        if (!researcherId || tokenPurpose !== "password-reset") {
-            return res.status(401).json({ message: "Token inválido" });
-        }
-
-        await ResearcherService.updateResearcher(
-            { _id: researcherId },
-            { passwordHash: hashContent(req.body.password) }
-        );
-
-        res.status(200).json({ message: "Senha atualizada com sucesso." });
-    } catch (e) {
-        console.error(e);
-        res.status(500).send("Unknown error.");
     }
 }
 

@@ -18,7 +18,7 @@ const researcherRouter = express.Router();
 researcherRouter.post(
     "/forgot-password",
     validateDTO(forgotPasswordDTO),
-    AuthController.forgotPasswordHandler
+    ResearcherController.forgotPasswordController
 );
 
 researcherRouter.post(
@@ -58,12 +58,6 @@ researcherRouter.get(
     "/get-research-data-by/sample/:sampleId/participant/:participantId",
     validateDTO(getResearchDataBySampleIdAndParticipantIdSchema),
     ResearcherController.handlerGetReseachDataBySampleIdAndParticipantId
-);
-
-researcherRouter.post(
-    "/forgot-password",
-    validateDTO(forgotPasswordDTO),
-    ResearcherController.forgotPasswordController
 );
 
 researcherRouter.post(
